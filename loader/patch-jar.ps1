@@ -28,15 +28,17 @@ $replace = @{
     'native/macos/x86_64/libEffekseerNativeForJava.dylib' = (Resolve-Path $Dylib).Path
 }
 
+# The JDK "jar" tool writes the archive (not .NET's ZipArchive: its STORED entries carry a data
+# descriptor that java.util.zip.ZipInputStream rejects, e.g. Nebula's Claritas).
+$stage = Join-Path $work 'stage'
+foreach ($name in $replace.Keys) {
+    $dst = Join-Path $stage ($name -replace '/', '\')
+    New-Item -ItemType Directory -Force (Split-Path $dst) | Out-Null
+    Copy-Item -LiteralPath $replace[$name] -Destination $dst
+    Write-Output "  + $name"
+}
 Copy-Item $Jar $Out -Force
-$zip = [IO.Compression.ZipFile]::Open($Out, 'Update')
-try {
-    foreach ($name in $replace.Keys) {
-        $old = $zip.GetEntry($name)
-        if ($old) { $old.Delete() }
-        [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $replace[$name], $name, 'Optimal') | Out-Null
-        Write-Output "  + $name"
-    }
-} finally { $zip.Dispose() }
+& (Join-Path $JdkBin 'jar.exe') uf $Out -C $stage com -C $stage native
+if ($LASTEXITCODE -ne 0) { throw 'jar update failed' }
 Remove-Item -Recurse -Force $work
 Write-Output "Written $Out"

@@ -6,7 +6,8 @@ on:
 
 jobs:
   macos-x86_64:
-    runs-on: macos-14
+    # Any supported macOS image: the library is cross-compiled for x86_64 below.
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
 

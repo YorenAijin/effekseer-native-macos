@@ -57,7 +57,8 @@ jobs:
               | sed -e 's/%/%25/g' -e 's/\r//g' | awk '{printf "%s%%0A", $0}')
             echo "::error title=$2::$msg"
           }
-          if ! cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=x86_64 \
+          # CMAKE_POLICY_VERSION_MINIMUM: CMake 4 refuses Effekseer's old cmake_minimum_required (< 3.5).
+          if ! cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
               -DBUILD_EXAMPLES=OFF -DBUILD_TEST=OFF -DBUILD_METAL=OFF -DBUILD_VULKAN=OFF -DBUILD_DX12=OFF > configure.log 2>&1; then
             cat configure.log; report configure.log "CMake configure failed"; exit 1
           fi

@@ -16,14 +16,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Same native code as the Windows DLL shipped in EffekseerCraft-DEFINITIVE.jar:
-      # EffekseerCraft 0.3.5.1.11 -> Effekseer4J -> MrMks/EffekseerForMultiLanguages
-      # (master of 2023-05-06, itself an unmodified copy of effekseer/EffekseerForMultiLanguages).
+      # Same native code as the Windows DLL shipped in EffekseerCraft-DEFINITIVE.jar
+      # (EffekseerCraft 0.3.5.1.11 -> Effekseer4J -> EffekseerForMultiLanguages):
+      # effekseer/EffekseerForMultiLanguages 76694511 "Add methods to profile" (2023-07-10),
+      # the only version exporting exactly the DLL's 65 JNI functions (MrMks' fork stops
+      # before 5 of them, later versions changed the API in 2025).
       # Only the Effekseer submodule is needed (no recursive checkout: Metal/LLGI is disabled).
       - uses: actions/checkout@v4
         with:
-          repository: MrMks/EffekseerForMultiLanguages
-          ref: 1abcf343ce9d2fbaddb67c7c00e7490840743a19
+          repository: effekseer/EffekseerForMultiLanguages
+          ref: 7669451171a84dbc54cdd921bd14fee331649eb7
           path: efml
           submodules: true
 

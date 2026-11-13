@@ -4,7 +4,7 @@ EffekseerCraft (`EffekseerCraft-DEFINITIVE.jar`, mod `efscraft` 0.3.5.1.11) n'em
 
 Ce dépôt compile cette bibliothèque pour macOS x86_64 avec GitHub Actions (un Mac de GitHub) :
 
-- même code que la DLL Windows du jar : `MrMks/EffekseerForMultiLanguages` au commit `1abcf343` (mai 2023) ;
+- même code que la DLL Windows du jar : `effekseer/EffekseerForMultiLanguages` au commit `76694511` (juillet 2023), seule version qui exporte exactement les mêmes fonctions JNI ;
 - seul changement : le moteur de rendu OpenGL2 au lieu d'OpenGL3, car Minecraft 1.12.2 n'a qu'OpenGL 2.1 sur Mac ;
 - la CI vérifie que la bibliothèque exporte exactement les 65 fonctions JNI de la DLL Windows (`expected-jni-exports.txt`).
 

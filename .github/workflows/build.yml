@@ -48,12 +48,24 @@ jobs:
         run: sh ./generate_swig_wrapper.sh
 
       # The launcher is x64 only on macOS (Rosetta on Apple Silicon), so is Minecraft's Java.
+      # On failure the error lines are also written as an annotation (readable without logging in).
       - name: Build
         working-directory: efml
         run: |
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=x86_64 \
-            -DBUILD_EXAMPLES=OFF -DBUILD_TEST=OFF -DBUILD_METAL=OFF -DBUILD_VULKAN=OFF -DBUILD_DX12=OFF
-          cmake --build build --config Release --target EffekseerNativeForJava -j 4
+          report() {
+            msg=$( (grep -E -i "error|undefined|not found|fatal" "$1" | head -n 40; echo "----- last lines:"; tail -n 15 "$1") \
+              | sed -e 's/%/%25/g' -e 's/\r//g' | awk '{printf "%s%%0A", $0}')
+            echo "::error title=$2::$msg"
+          }
+          if ! cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=x86_64 \
+              -DBUILD_EXAMPLES=OFF -DBUILD_TEST=OFF -DBUILD_METAL=OFF -DBUILD_VULKAN=OFF -DBUILD_DX12=OFF > configure.log 2>&1; then
+            cat configure.log; report configure.log "CMake configure failed"; exit 1
+          fi
+          cat configure.log
+          if ! cmake --build build --config Release --target EffekseerNativeForJava -j 4 > build.log 2>&1; then
+            cat build.log; report build.log "Build failed"; exit 1
+          fi
+          tail -n 30 build.log
 
       # Must export exactly the same JNI functions as the Windows DLL of the jar.
       - name: Check the library
@@ -66,7 +78,11 @@ jobs:
           otool -L "$lib"
           nm -gU "$lib" | awk '{print $3}' | sed 's/^_//' | grep '^Java_' | LC_ALL=C sort > actual-jni-exports.txt
           tr -d '\r' < expected-jni-exports.txt | LC_ALL=C sort > expected.txt
-          diff -u expected.txt actual-jni-exports.txt
+          if ! diff -u expected.txt actual-jni-exports.txt > exports.diff; then
+            cat exports.diff
+            echo "::error title=JNI exports differ::$(head -n 60 exports.diff | sed -e 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
+            exit 1
+          fi
           echo "JNI exports: $(wc -l < actual-jni-exports.txt) (same as the Windows DLL)"
           mkdir -p dist/native/macos/x86_64
           cp "$lib" dist/native/macos/x86_64/libEffekseerNativeForJava.dylib

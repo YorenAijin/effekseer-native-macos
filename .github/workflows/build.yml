@@ -6,8 +6,13 @@ on:
 
 jobs:
   macos-x86_64:
-    # Any supported macOS image: the library is cross-compiled for x86_64 below.
-    runs-on: macos-latest
+    # Two runner types because macOS arm64 runners are often saturated; one success is enough.
+    # Either way the library is built for x86_64 (CMAKE_OSX_ARCHITECTURES below).
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [macos-15-intel, macos-latest]
+    runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
 
@@ -91,5 +96,5 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: effekseer-native-macos-x86_64
+          name: effekseer-native-macos-x86_64-${{ matrix.runner }}
           path: dist
